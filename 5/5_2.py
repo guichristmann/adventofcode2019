@@ -95,6 +95,3 @@ while not halt:
         ptr += 3
     elif opcode == 1 or opcode == 2 or opcode == 7 or opcode == 8:
         ptr += 4
-
-    #print(memory)
-    #input()
