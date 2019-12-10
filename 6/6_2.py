@@ -1,5 +1,5 @@
 import numpy as np
-with open("input.txt", "r") as f:
+with open("input2.txt", "r") as f:
     data = [orbit.strip("\n") for orbit in f.readlines()]
 
 #data = ["COM)B",
@@ -23,6 +23,9 @@ class Node:
         self.val = val
         self.parent = None
         self.children = []
+        self.dist = float('infinity')
+        self.length = 1
+        self.goes_to = None
 
 def searchNode(node, targetVal):
     if node.val == targetVal:
@@ -104,6 +107,8 @@ for o in data[0:]:
         # If child of this parent was a child of root remove it
         root.children.remove(cTree)
         root.children.append(parent)
+        # Connect child to newly created parent
+        cTree.parent = parent
 
     # Both don't exist in tree
     else:
@@ -116,18 +121,69 @@ for o in data[0:]:
         parent.children.append(child)
         root.children.append(parent)
 
-printTree(root, 0, 100)
-res = countOrbits(root.children[0], 0, 0)
-print(res)
+# bye bye "root"
+
+#printTree(root, 0, 100)
+#res = countOrbits(root.children[0], 0, 0)
 
 # Find YOU
-you_node, you_depth = searchNode2(root, "YOU", depth=0)
-san_node, san_depth = searchNode2(root, "SAN", depth=0)
-print(you_node)
-print(san_node)
-assert you_node != None
-assert san_node != None
-print(you_node.val)
-print(san_node.val)
-print(you_depth)
-print(san_depth)
+you_node = searchNode(root, "YOU")
+san_node = searchNode(root, "SAN")
+root.children[0].parent = None
+print(root.children[0].val)
+print(root.children[0].parent)
+print(root.parent)
+
+# Find the shortest path going "up"
+visited = []
+unvisited = [you_node]
+cNode = you_node
+cNode.dist = 0
+count = 0
+while len(unvisited) != 0:
+    #print(f"cNode: {cNode.val}.")
+    # Newly seen node
+    neighbors = []
+    if cNode.parent != None and cNode.parent.val == "root":
+        print(f"{cNode.val} my parent is root ..")
+
+    if cNode.parent not in visited and cNode.parent not in unvisited and \
+            cNode.parent is not None:
+        unvisited.append(cNode.parent)
+        neighbors.append(cNode.parent)
+    elif cNode.parent not in visited and cNode.parent is not None:
+        neighbors.append(cNode.parent)
+
+    for child in cNode.children:
+        if child.val == "root":
+            print("child is root...")
+        if child not in visited and child not in unvisited:
+            unvisited.append(child)
+            neighbors.append(child)
+        elif child not in visited:
+            neighbors.append(child)
+
+    n_vals = [n.val for n in neighbors]
+    #print(f"Neighbors: {n_vals}.")
+
+    for neighbor in neighbors:
+        dist = cNode.dist + neighbor.length
+        if dist < neighbor.dist:
+            neighbor.dist = dist
+            neighbor.goes_to = cNode
+
+    visited.append(cNode)
+    unvisited.remove(cNode)
+
+    smallest_dist = float('inf')
+    for node in unvisited:
+        if node.dist < smallest_dist:
+            cNode = node
+            smallest_dist = node.dist
+
+n = san_node
+while n != None:
+    print(f"{n.val}: {n.dist}")
+    n = n.goes_to
+
+print(f"Smallest distance: {san_node.dist}.")
